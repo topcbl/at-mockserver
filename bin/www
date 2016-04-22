@@ -1,0 +1,111 @@
+#!/usr/bin/env node
+
+var dummyData = require('../dummy_data/lifesport');
+var jsonServer = require('json-server')
+var server = jsonServer.create()
+var bodyParser = require("body-parser");
+var url = require('url')
+
+server.use(jsonServer.defaults())
+    .use(bodyParser.urlencoded({extended: false}))
+    .use(bodyParser.json());
+
+// === Routes ===
+server.get('/users', function (req, res) {
+    successWrapper(res, dummyData.getUsers())
+})
+server.get('/usersfail', function (req, res) {
+    failureWrapper(res, dummyData.getUsers())
+})
+server.get('/prefectures', function (req, res) {
+    successWrapper(res, dummyData.getPrefectures())
+})
+server.get("/cities", function (req, res) {
+    var parts = url.parse(req.url, true)
+    var query = parts.query
+    var cities = dummyData.getCities().cities
+    var filteredCities = new Array();
+    if (query.id == undefined) {
+        filteredCities = cities
+    } else for (var i = 0; i < cities.length; i++) {
+        if (cities[i].prefecture_id == query.id) {
+            filteredCities.push(cities[i])
+        }
+    }
+    successWrapper(res, {
+        cities: filteredCities
+    })
+})
+
+server.get("/home/p1", function (req, res) {
+    var data = {
+        events: dummyData.getEvents().events,
+        recommend_events: dummyData.getEvents().recommend_events,
+    }
+    //return res.json(data)
+    successWrapper(res, data)
+
+})
+server.get("/home/p2", function (req, res) {
+    var data = {
+        event_sports: dummyData.getEventSports().sports,
+        waiting_events: dummyData.getWaitingEvents().waiting_list
+    }
+    //return res.json(data)
+    successWrapper(res, data)
+
+})
+
+server.get('/sports', function (req, res) {
+    successWrapper(res, dummyData.getSports())
+    //failureWrapper(res, "")
+})
+server.get('/facility', function (req, res) {
+    successWrapper(res, dummyData.getFacilities())
+})
+server.get('/notifications/unread-count', function (req, res) {
+    successWrapper(res, {
+        "notifications": {
+            total_unread: 30
+        }
+    })
+})
+server.get('/events', function (req, res) {
+    successWrapper(res, dummyData.getEvents())
+})
+server.post('/login', function (req, res) {
+    var email = req.body.email
+    var pass = req.body.password
+    console.log("====" + req.body)
+    if ("test@gmail.com" == email && "123456" == pass)
+        successWrapper(res, {
+            user: dummyData.getAUsers(),
+            access_token: "ea5e9501f6951092f76a29665e69f5e5"
+        })
+    else
+        failureWrapper(res)
+})
+
+
+// =============
+
+function successWrapper(res, data) {
+    return res.json({
+        status: true,
+        result: data
+    })
+}
+
+function failureWrapper(res, data) {
+    return res.json({
+        "status": false,
+        "result": {
+            "message": "何もありません",
+            "code": "411",
+            "errors": []
+        }
+    })
+}
+
+server.listen(3000)
+console.log("Started server!!")
