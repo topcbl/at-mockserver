@@ -85,8 +85,6 @@ server.post('/login', function (req, res) {
     else
         failureWrapper(res)
 })
-
-
 // =============
 
 function successWrapper(res, data) {
